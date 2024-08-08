@@ -34,10 +34,12 @@ except ImportError:
     from utils.telemetry import my_tracer, os_name
     from audio.wake_word import wake_word
     from audio.tts import text_to_speech
+import platform
 import threading
 import time
 import random
 import math
+
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from PyQt5.QtGui import QMouseEvent, QPainter, QPen, QBrush, QIcon, QColor
 from PyQt5.QtCore import Qt, QTimer, QRect, pyqtSignal
@@ -56,6 +58,7 @@ from PyQt5.QtWidgets import QTextEdit
 from PyQt5 import QtGui
 from PyQt5.QtCore import QThread
 import pygame
+
 
 print("Imported all libraries")
 
@@ -202,6 +205,66 @@ class Worker_2(QThread):
                     self.msleep(10)                
 
 
+
+class Worker_3(QThread):
+    text_to_set = pyqtSignal(str)
+
+
+    def __init__(self):
+        super().__init__()
+        self.the_input_text = None
+
+
+
+    def run(self):
+        while True:
+            self.msleep(500)  # Simulate a time-consuming task
+
+            if self.the_input_text:
+                self.text_to_set.emit("True")
+                self.the_input_text = None
+
+
+
+
+class Worker_collapse(QThread):
+    text_to_set = pyqtSignal(str)
+
+
+    def __init__(self):
+        super().__init__()
+        self.the_input_text = None
+
+
+
+    def run(self):
+        while True:
+            self.msleep(500)  # Simulate a time-consuming task
+
+            if self.the_input_text:
+                self.text_to_set.emit("True")
+                self.the_input_text = None
+               
+        
+
+class Worker_uncollapse(QThread):
+    text_to_set = pyqtSignal(str)
+
+
+    def __init__(self):
+        super().__init__()
+        self.the_input_text = None
+
+
+
+    def run(self):
+        while True:
+            self.msleep(500)  # Simulate a time-consuming task
+
+            if self.the_input_text:
+                self.text_to_set.emit("True")
+                self.the_input_text = None
+               
 
 
 class DrawingWidget(QWidget):
@@ -470,24 +533,17 @@ class DrawingWidget(QWidget):
                     if self.main_.circle_rect.contains(event.pos()):
 
                         if self.main_.state == "aitalking":
-                            self.main_.manuel_stop = True
-                            self.main_.stop_talking = True
+                            self.main_.stop_ai_talking()
 
                         else:
-                            click_sound()
-                            if llm_settings[load_model_settings()]["vision"] is True:
-
-                                self.main_.button_handler.toggle_recording(dont_save_image=True)
-                            else:
-                                self.main_.button_handler.toggle_recording(no_screenshot=True)
+                            self.main_.screenshot_and_microphone_button_action()
                 except:
                     traceback.print_exc()
 
                 try:
                             if self.main_.small_circle_rect.contains(event.pos()):
                                 if self.main_.state == "aitalking":
-                                    self.main_.manuel_stop = True
-                                    self.main_.stop_talking = True
+                                    self.main_.stop_ai_talking()
 
                                 else: 
                                     click_sound()
@@ -499,8 +555,7 @@ class DrawingWidget(QWidget):
 
                             if self.main_.small_circle_left.contains(event.pos()):
                                 if self.main_.state == "aitalking":
-                                    self.main_.manuel_stop = True
-                                    self.main_.stop_talking = True
+                                    self.main_.stop_ai_talking()
 
                                 else:       
                                     click_sound()                          
@@ -512,8 +567,7 @@ class DrawingWidget(QWidget):
 
                             if self.main_.small_circle_left_top.contains(event.pos()):
                                 if self.main_.state == "aitalking":
-                                    self.main_.manuel_stop = True
-                                    self.main_.stop_talking = True
+                                    self.main_.stop_ai_talking()
 
                                 else:
                                     click_sound()
@@ -526,21 +580,9 @@ class DrawingWidget(QWidget):
             try:
                 if self.main_.small_circle_collapse.contains(event.pos()):
                     if self.main_.collapse:
-                        self.main_.collapse = False
-                        print()
-                        # hide all buttons and input box
-                        the_input_box.show()
-                        if llm_settings[load_model_settings()]["vision"]:
-                            self.main_.screenshot_button.show()
-                        self.main_.settingsButton.show()
-                        self.main_.llmsettingsButton.show()
-                        self.main_.send_button.show()
-                        self.main_.window().setFixedSize(self.main_.first_width, self.main_.first_height)
-                        deactivate_collapse_setting()
+                        self.main_.uncollapse_gca()
                     else:
-                        self.main_.collapse = True
-                        self.main_.collapse_window()
-                        activate_collapse_setting()
+                        self.main_.collapse_gca()
 
 
                     self.main_.update()
@@ -552,8 +594,27 @@ from PyQt5.QtCore import QVariantAnimation
 
 class MainWindow(QMainWindow):
     api_enabled = False
+
+
+    def screenshot_and_microphone_button_action(self):
+        click_sound()
+        if llm_settings[load_model_settings()]["vision"] is True:
+
+            self.button_handler.toggle_recording(dont_save_image=True)
+        else:
+            self.button_handler.toggle_recording(no_screenshot=True)
+
+    def stop_ai_talking(self):
+        self.manuel_stop = True
+        self.stop_talking = True
+
     def __init__(self):
         super().__init__()
+
+        self.background_color = "45, 45, 45"
+        self.opacity = 250
+        self.border_radius = 10
+
 
         print("API Enabled:", MainWindow.api_enabled)
         if MainWindow.api_enabled:
@@ -625,6 +686,26 @@ class MainWindow(QMainWindow):
         self.reading_thread = False
         self.reading_thread_2 = False
 
+
+
+
+
+        # Logo Adding
+        if is_logo_active_setting_active():
+            image_layout = QHBoxLayout()
+            self.the_image = QLabel(self)
+            self.the_image.setPixmap(QtGui.QPixmap(load_logo_file_path()).scaled(15, 15))
+
+            image_layout.addWidget(self.the_image)
+            self.layout.addLayout(image_layout)
+            self.the_image.setAlignment(Qt.AlignCenter)
+            self.the_image.setFixedHeight(35)
+
+            self.setFixedSize(self.width(), self.height() + 40)
+        
+
+
+
     def init_border_animation(self):
         # Create a QVariantAnimation to handle color change
         border_animation = QVariantAnimation(
@@ -657,21 +738,33 @@ class MainWindow(QMainWindow):
 
     # Existing methods...
 
-    def general_styling(self):
+    def general_styling(self, a=None):
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setStyleSheet("border-radius: 10px; background-color: rgba(45, 45, 45, 250);")
+        self.setStyleSheet(f"border-radius: {self.border_radius}px; background-color: rgba({self.background_color}, {self.opacity});")
         self.central_widget.setStyleSheet("border-style: solid; border-width: 1px; border-color: rgb(0,0,0,0);")
 
         self.input_box_style = "border-radius: 10px; border-bottom: 1px solid #01EE8A;"
 
-        self.send_button_style = "border-radius: 5px; height: 25px; border-style: solid;"
-        self.screenshot_button_style = "border-radius: 5px; height: 25px; border-style: solid;"
+
 
         self.settingsButton_style = "border-radius: 5px; height: 25px; border-style: solid;"
         self.llmsettingsButton_style = "border-radius: 5px; height: 25px; border-style: solid;"
 
         self.btn_minimize.setStyleSheet("background-color: #2E2E2E; color: white; border-style: none;")
         self.btn_close.setStyleSheet("background-color: #2E2E2E; color: white; border-style: none;")
+
+
+    def set_background_color(self, color):
+        self.background_color = color
+        self.worker_3.the_input_text = "True"
+
+    def set_opacity(self, opacity):
+        self.opacity = opacity
+        self.worker_3.the_input_text = "True"
+
+    def set_border_radius(self, radius):
+        self.border_radius = radius
+        self.worker_3.the_input_text = "True"
 
 
     def wake_word_trigger(self):
@@ -718,8 +811,7 @@ class MainWindow(QMainWindow):
         self.setPalette(p)
         self.input_box.setStyleSheet(self.input_box_style+"background-color: #2E2E2E; color: white;")
 
-        self.send_button.setStyleSheet(self.send_button_style+"background-color: #2E2E2E; color: white;")
-        self.screenshot_button.setStyleSheet(self.screenshot_button_style+"background-color: #2E2E2E; color: white;")
+
 
         self.settingsButton.setStyleSheet(self.settingsButton_style+"background-color: #2E2E2E; color: white;")
         self.llmsettingsButton.setStyleSheet(self.llmsettingsButton_style+"background-color: #2E2E2E; color: white;")
@@ -733,8 +825,7 @@ class MainWindow(QMainWindow):
         p.setColor(self.backgroundRole(), QColor("#F0F0F0"))
         self.setPalette(p)
         self.input_box.setStyleSheet(self.input_box_style+"background-color: #FFFFFF; color: black;")
-        self.send_button.setStyleSheet(self.send_button_style+"background-color: #FFFFFF; color: black; ")
-        self.screenshot_button.setStyleSheet(self.screenshot_button_style+"background-color: #FFFFFF; color: black; ")
+
         self.settingsButton.setStyleSheet(self.settingsButton_style+"background-color: #FFFFFF; color: black; ")
         self.llmsettingsButton.setStyleSheet(self.llmsettingsButton_style+"background-color: #FFFFFF; color: black; ")
 
@@ -744,11 +835,17 @@ class MainWindow(QMainWindow):
 
     def collapse_window(self):
         the_input_box.hide()
-        self.screenshot_button.hide()
+
         self.settingsButton.hide()
         self.llmsettingsButton.hide()
-        self.send_button.hide()
+
+
+
         self.window().setFixedSize(self.width(), 140)        
+
+        # Logo Adding
+        if is_logo_active_setting_active():
+            self.window().setFixedSize(self.width(), 175) 
 
 
 
@@ -760,13 +857,7 @@ class MainWindow(QMainWindow):
         self.first_height = self.height()
         self.first_width = self.width()
 
-        app_icon = QtGui.QIcon()
-        app_icon.addFile(icon_16_path, QtCore.QSize(16, 16))
-        app_icon.addFile(icon_24_path, QtCore.QSize(24, 24))
-        app_icon.addFile(icon_32_path, QtCore.QSize(32, 32))
-        app_icon.addFile(icon_48_path, QtCore.QSize(48, 48))
-        app_icon.addFile(icon_256_path, QtCore.QSize(256, 256))
-        self.setWindowIcon(app_icon)
+
 
         self.central_widget = QWidget(self)
         self.setCentralWidget(self.central_widget)
@@ -775,14 +866,14 @@ class MainWindow(QMainWindow):
         # Custom title bar
         self.title_bar = QWidget(self)
         self.title_bar.setFixedHeight(30)  # Set a fixed height for the title bar
-        self.title_bar.setStyleSheet("background-color: #2E2E2E; color: #fff;")
+        self.title_bar.setStyleSheet("background-color: #2E2E2E; color: #fff; border-radius: 15px; border-style: solid; border-width: 1px; border-color: #303030;")
 
         self.title_bar_layout = QHBoxLayout(self.title_bar)
         self.title_bar_layout.setContentsMargins(5, 5, 0, 5)
         self.title_bar_layout.setSpacing(0)
 
         self.btn_minimize = QPushButton("_", self.title_bar)
-        self.btn_minimize.setFixedSize(25, 20)
+        self.btn_minimize.setFixedSize(20, 20)
         self.btn_minimize.clicked.connect(self.showMinimized)
 
         def stop_app():
@@ -795,12 +886,14 @@ class MainWindow(QMainWindow):
 
 
         self.btn_close = QPushButton("X", self.title_bar)
-        self.btn_close.setFixedSize(30, 20)
+        self.btn_close.setFixedSize(20, 20)
         self.btn_close.clicked.connect(stop_app)
 
         self.title_label = QLabel("  "+name(), self.title_bar)
         self.title_label.setStyleSheet("border: 0px solid blue;") 
+
         self.title_bar_layout.addWidget(self.title_label)
+        self.title_bar_layout.addStretch()
         self.title_bar_layout.addWidget(self.btn_minimize)
 
 
@@ -859,14 +952,25 @@ class MainWindow(QMainWindow):
         self.input_box = input_box
 
 
-        input_box.setFixedHeight(40)
+        input_box.setFixedHeight(80)
 
 
         if load_api_key() == "CHANGE_ME":
             input_box.setPlaceholderText("Save your API Key, go to settings")
         else:
-            input_box.setPlaceholderText("Type here")
-        input_box.setGeometry(30, self.height() - 60, 200, 30)
+
+            if platform.system() == "Darwin":
+                if llm_settings[load_model_settings()]["vision"] is False:
+                    input_box.setPlaceholderText("Type here \nsand ↵ ")
+                else:
+                    input_box.setPlaceholderText("Type here \nand ↵ \nor ⌘ + ↵ (+screenshot)")
+            else:
+                if llm_settings[load_model_settings()]["vision"] is False:
+                    input_box.setPlaceholderText("Type here \nand ↵ ")
+                else:
+                    input_box.setPlaceholderText("Type here \nand ↵ \nor Ctrl + ↵ (+screenshot)")
+            # Add an information and use enter icon to the input box for mac            
+        input_box.setGeometry(30, self.height() - 60, 200, 80)
         global the_input_box
         the_input_box = input_box
 
@@ -882,26 +986,8 @@ class MainWindow(QMainWindow):
 
         self.layout.addWidget(input_box)
 
-        # Create a horizontal layout
-        button_layout = QHBoxLayout()
-
-        # Create the send button
-        self.send_button = QPushButton("Send", self)
-        self.send_button.clicked.connect(input_box_send)
-
-        # Create the screenshot button
-        self.screenshot_button = QPushButton("+Screenshot", self)
-        self.screenshot_button.clicked.connect(input_box_send_screenshot)
 
 
-        if llm_settings[load_model_settings()]["vision"] is False:
-            self.screenshot_button.hide()
-
-
-
-        # Add the buttons to the horizontal layout
-        button_layout.addWidget(self.send_button)
-        button_layout.addWidget(self.screenshot_button)
 
         self.shortcut_enter = QShortcut(QKeySequence("Ctrl+Return"), self)
         self.shortcut_enter.activated.connect(input_box_send_screenshot)
@@ -909,7 +995,7 @@ class MainWindow(QMainWindow):
         global return_key_event
         return_key_event = input_box_send
 
-        self.layout.addLayout(button_layout)
+
 
         button_layout_ = QHBoxLayout()
 
@@ -933,6 +1019,21 @@ class MainWindow(QMainWindow):
         self.worker_2.text_to_set.connect(self.start_border_animation)
         self.worker_2.text_to_set_title_bar.connect(self.set_title_bar_text)
         self.worker_2.start()
+
+        self.worker_3 = Worker_3()
+        self.worker_3.text_to_set.connect(self.general_styling)
+        self.worker_3.start()
+
+
+        self.worker_collapse = Worker_collapse()
+        self.worker_collapse.text_to_set.connect(self.collapse_gca)
+        self.worker_collapse.start()
+
+
+        self.worker_uncollapse = Worker_uncollapse()
+        self.worker_uncollapse.text_to_set.connect(self.uncollapse_gca)
+        self.worker_uncollapse.start()
+
 
         # print height and width
         print(self.height(), self.width())
@@ -1053,6 +1154,16 @@ class MainWindow(QMainWindow):
 
 
 
+    def set_text_from_api(self, text):
+        self.worker.make_animation = True
+        self.worker.the_input_text = text
+
+
+
+
+
+
+
 
 
 
@@ -1105,11 +1216,11 @@ class MainWindow(QMainWindow):
 
     def remove_screenshot_button(self):
         self.update()
-        self.screenshot_button.hide()
+
 
     def add_screenshot_button(self):
         self.update()
-        self.screenshot_button.show()
+
 
     def update_state(self, new_state):
 
@@ -1126,6 +1237,7 @@ class MainWindow(QMainWindow):
         self.state = new_state
         print(f"State updated: {new_state}")
         if "talking" in new_state:
+            self.tray.setIcon(self.tray_active_icon)
             self.pulse_frame = 0
             if self.pulse_timer:
                 self.pulse_timer.stop()
@@ -1144,6 +1256,7 @@ class MainWindow(QMainWindow):
             self.pulse_timer.timeout.connect(self.pulse_circle)
             self.pulse_timer.start(20)
         elif self.pulse_timer:
+            self.tray.setIcon(self.tray_icon)
             self.pulse_timer.stop()
             self.pulse_timer = None
         self.update()  # Trigger a repaint
@@ -1163,3 +1276,36 @@ class MainWindow(QMainWindow):
         self.update()
 
 
+
+
+    def collapse_gca(self):
+        self.collapse = True
+        self.collapse_window()
+        activate_collapse_setting()
+
+    def collapse_gca_api(self):
+        self.worker_collapse.the_input_text = "True"
+
+
+    def uncollapse_gca(self):
+        self.collapse = False
+        print()
+        # hide all buttons and input box
+        the_input_box.show()
+
+        self.settingsButton.show()
+        self.llmsettingsButton.show()
+
+        self.window().setFixedSize(self.first_width, self.first_height)
+
+        # Logo Adding
+        if is_logo_active_setting_active():
+            self.window().setFixedSize(self.first_width, self.first_height + 35)
+
+
+        deactivate_collapse_setting()
+
+
+    def uncollapse_gca_api(self):
+        self.worker_uncollapse.the_input_text = "True"
+        

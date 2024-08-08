@@ -251,6 +251,202 @@ def custom_tool():
         return jsonify({"response": f"Custom tool addition failed: {e}"}), 500
 
 
+
+
+
+@app.route("/top_bar_activate", methods=["POST"])
+def top_bar_activate():
+    """
+    This function serve an animation of top bar to show an operations especialy
+    """
+    from .gpt_computer_assistant import the_main_window
+    data = request.json
+    text = data["text"]
+    
+    the_main_window.active_border_animation(text)
+    return jsonify({"response": "Activated top bar animation"})
+
+@app.route("/top_bar_deactivate", methods=["POST"])
+def top_bar_deactivate():
+    """
+    This function stop the top bar animation
+    """
+    from .gpt_computer_assistant import the_main_window
+    data = request.json
+    text = data["text"]
+    the_main_window.deactive_border_animation(text)
+    return jsonify({"response": "Deactivated top bar animation"})
+
+
+
+@app.route("/boop_sound", methods=["POST"])
+def boop_sound():
+    """
+    This function sound an boop to user
+    """
+
+    from .gpt_computer_assistant import click_sound
+    click_sound()
+    return jsonify({"response": "Sound played"})
+
+
+@app.route("/ask_to_user", methods=["POST"])
+def ask_to_user():
+    """
+    This api asks question to the user and return the result
+    """
+    data = request.json
+    question = data["question"]
+    wait_for_answer = data["wait_for_answer"]
+    from .standard_tools import ask_to_user
+    result = ask_to_user(question, wait_for_answer)
+    return jsonify({"response": result})
+
+
+@app.route("/set_text", methods=["POST"])
+def set_text():
+    """
+    This api set text to main window text input 
+    """
+    data = request.json
+    text = data["text"]
+    from .gpt_computer_assistant import the_main_window
+    the_main_window.set_text_from_api(text)
+    return jsonify({"response": "Text set."})
+
+
+@app.route("/set_background_color", methods=["POST"])
+def set_background_color():
+    """
+    This api set text to main window text input 
+    """
+    data = request.json
+    color = data["color"]
+    from .gpt_computer_assistant import the_main_window
+    the_main_window.set_background_color(color)
+    return jsonify({"response": "Background color set."})
+
+@app.route("/set_opacity", methods=["POST"])
+def set_opacity():
+    """
+    This api set text to main window text input 
+    """
+    data = request.json
+    opacity = data["opacity"]
+    from .gpt_computer_assistant import the_main_window
+    the_main_window.set_opacity(opacity)
+    return jsonify({"response": "Opacity set."})
+
+@app.route("/set_border_radius", methods=["POST"])
+def set_border_radius():
+    """
+    This api set text to main window text input 
+    """
+    data = request.json
+    radius = data["radius"]
+    from .gpt_computer_assistant import the_main_window
+    the_main_window.set_border_radius(radius)
+    return jsonify({"response": "Border radius set."})
+
+@app.route("/collapse", methods=["POST"])
+def collapse():
+    """
+    This api set text to main window text input 
+    """
+    from .gpt_computer_assistant import the_main_window
+    the_main_window.collapse_gca_api()
+    return jsonify({"response": "Collapsed."})
+
+@app.route("/expand", methods=["POST"])
+def expand():
+    """
+    This api set text to main window text input 
+    """
+    from .gpt_computer_assistant import the_main_window
+    the_main_window.uncollapse_gca_api()
+    return jsonify({"response": "Expanded."})
+
+
+@app.route("/save_openai_api_key", methods=["POST"])
+def save_openai_api_key():
+    """
+    This api saves the OpenAI API key
+    """
+    data = request.json
+    openai_api_key = data["openai_api_key"]
+    from .utils.db import save_api_key
+    save_api_key(openai_api_key)
+    return jsonify({"response": "OpenAI API key saved."})
+
+
+@app.route("/save_openai_url", methods=["POST"])
+def save_openai_url():
+    """
+    This api saves the OpenAI base URL
+    """
+    data = request.json
+    openai_url = data["openai_url"]
+    from .utils.db import save_openai_url
+    save_openai_url(openai_url)
+    return jsonify({"response": "OpenAI base URL saved."})
+
+@app.route("/save_model_settings", methods=["POST"])
+def save_model_settings():
+    """
+    This api saves the model settings
+    """
+    data = request.json
+    model_settings = data["model_settings"]
+    from .utils.db import save_model_settings
+    save_model_settings(model_settings)
+    return jsonify({"response": "Model settings saved."})
+
+@app.route("/save_groq_api_key", methods=["POST"])
+def save_groq_api_key():
+    """
+    This api saves the Groq API key
+    """
+    data = request.json
+    groq_api_key = data["groq_api_key"]
+    from .utils.db import save_groq_api_key
+    save_groq_api_key(groq_api_key)
+    return jsonify({"response": "Groq API key saved."})
+
+@app.route("/save_google_api_key", methods=["POST"])
+def save_google_api_key():
+    """
+    This api saves the Google Generative AI API key
+    """
+    data = request.json
+    google_api_key = data["google_api_key"]
+    from .utils.db import save_google_api_key
+    save_google_api_key(google_api_key)
+    return jsonify({"response": "Google Generative AI API key saved."})
+
+
+@app.route("/save_tts_model_settings", methods=["POST"])
+def save_tts_model_settings():
+    """
+    This api saves the TTS model settings
+    """
+    data = request.json
+    tts_model_settings = data["tts_model_settings"]
+    from .utils.db import save_tts_model_settings
+    save_tts_model_settings(tts_model_settings)
+    return jsonify({"response": "TTS model settings saved."})
+
+@app.route("/save_stt_model_settings", methods=["POST"])
+def save_stt_model_settings():
+    """
+    This api saves the STT model settings
+    """
+    data = request.json
+    stt_model_settings = data["stt_model_settings"]
+    from .utils.db import save_stt_model_settings
+    save_stt_model_settings(stt_model_settings)
+    return jsonify({"response": "STT model settings saved."})
+
+
 class ServerThread(threading.Thread):
     def __init__(self, app, host, port):
         threading.Thread.__init__(self)

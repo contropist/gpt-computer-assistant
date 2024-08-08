@@ -121,6 +121,7 @@ icon_16_path = os.path.join(media_dir, "icon_16.png")
 icon_24_path = os.path.join(media_dir, "icon_24.png")
 icon_32_path = os.path.join(media_dir, "icon_32.png")
 icon_48_path = os.path.join(media_dir, "icon_48.png")
+icon_48_active_path = os.path.join(media_dir, "icon_48_active.png")
 icon_256_path = os.path.join(media_dir, "icon_256.png")
 screenshot_icon_path = os.path.join(media_dir, "Screenshot.png")
 audio_icon_path = os.path.join(media_dir, "Audio.png")
@@ -129,6 +130,8 @@ up_icon_path = os.path.join(media_dir, "Up.png")
 down_icon_path = os.path.join(media_dir, "Down.png")
 
 click_sound_path = os.path.join(media_dir, "boop.mp3")
+
+gca_logo_path = os.path.join(media_dir, "gca_logo.png")
 
 agents = []  # Placeholder for agents data
 
@@ -463,6 +466,52 @@ def load_stt_model_settings():
     if not os.path.exists(stt_model_settings_db):
         return "openai"
     with open(stt_model_settings_db, "r") as f:
+        return f.read()
+    
+
+
+
+
+
+logo_active_setting = os.path.join(artifacts_dir, "logo_active_setting.db")
+
+
+def activate_logo_active_setting():
+    """Activate the logo_active_setting."""
+    with open(logo_active_setting, "w") as f:
+        f.write("1")
+
+
+def deactivate_logo_active_setting():
+    """Deactivate the logo_active_setting."""
+    with open(logo_active_setting, "w") as f:
+        f.write("0")
+
+def is_logo_active_setting_active():
+    """Check if the logo_active_setting is active."""
+    if not os.path.exists(logo_active_setting):
+        return False
+    with open(logo_active_setting, "r") as f:
+        return f.read() == "1"
+    
+
+
+
+
+logo_file_path = os.path.join(artifacts_dir, "loog_file.db")
+
+
+def save_logo_file_path(model):
+    """Save the logo_file_path to a file."""
+    with open(logo_file_path, "w") as f:
+        f.write(model)
+
+
+def load_logo_file_path():
+    """Load the logo_file_path from a file."""
+    if not os.path.exists(logo_file_path):
+        return gca_logo_path
+    with open(logo_file_path, "r") as f:
         return f.read()
     
 
